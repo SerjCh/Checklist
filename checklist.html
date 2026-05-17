@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>The checklist</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <meta name="description" content="The simplest checklist ever">
+  <meta name="keywords" content="checklist">
+  <style>
+    html {
+      font-family: 'Noto Sans Mono', monospace;
+      font-size: xxx-large;
+      color: #ccc;
+      background: #333;
+    }
+
+    @media (max-width: 480px) {
+      html {
+        font-size: xx-large;
+      }
+    }
+
+    @media (max-width: 360px) {
+      html {
+        font-size: x-large;
+      }
+    }
+
+    html, body {
+      overflow: hidden;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #container {
+      overflow: auto;
+      height: 100%;
+      padding: 1rem 1rem 1rem 0;
+      box-sizing: border-box;
+
+      div {
+        position: relative;
+        margin: 0;
+        padding: 0 0 0 2.25em;
+      }
+
+      div:not(:first-child) {
+        margin-top: .5rem;
+      }
+
+      div:before {
+        pointer-events: auto;
+        cursor: pointer;
+        position: absolute;
+        left: 0;
+        top: -.125em;
+        height: 100%;
+        padding: 0 .1875em 0 1rem;
+        content: '☐';
+      }
+
+      div.checked {
+        color: #666;
+        text-decoration: line-through;
+      }
+
+      div.checked:before {
+        content: '☑';
+      }
+    }
+
+    #length {
+      display: flex;
+      align-items: center;
+      position: absolute;
+      right: 1rem;
+      bottom: 0;
+      height: 1rem;
+      font-size: .5em;
+    }
+
+    #alert {
+      opacity: 0;
+      pointer-events: none;
+      touch-action: none;
+      position: absolute;
+      z-index: 2;
+      left: 0;
+      right: 0;
+      bottom: -3rem;
+      padding: 1rem;
+      color: #ccc;
+      text-align: center;
+      background: #c00;
+      transition: .25s ease all;
+    }
+
+    #alert.visible {
+      opacity: 1;
+      pointer-events: all;
+      touch-action: auto;
+      bottom: 0;
+    }
+  </style>
+</head>
+
+<body>
+<div id="container" contenteditable>
+  <div>Item1</div>
+</div>
+<small id="length"></small>
+<div id="alert"></div>
+</body>
+<script>
+  const c = document.getElementById('container');
+  const l = document.getElementById('length');
+  const a = document.getElementById('alert');
+  let alertTimer = setTimeout(() => null);
+  const init = `<div>Item1</div>`;
+  try {
+    c.innerHTML = localStorage.getItem('checklist') || init;
+  } catch (e) {
+    c.innerHTML = init;
+  }
+  const maxLength = 65536;
+  l.innerHTML = `${c.textContent.length}/${maxLength}`;
+  let writeTimer = setTimeout(() => null);
+  c.addEventListener('mousedown', mouse);
+  c.addEventListener('click', mouse);
+  c.addEventListener('input', keyboard);
+  c.addEventListener('keyup', keyboard);
+  c.addEventListener('copy', copy);
+  c.addEventListener('paste', paste);
+
+  function mouse(e) {
+    const t = e.target;
+    const x = e.clientX || (e.touches?.[0]?.clientX) || 0;
+    const bound = t?.getBoundingClientRect().left ?? 0;
+    const checkbox = window.getComputedStyle(t, ':before');
+
+    if (t?.tagName === 'DIV' && (x - bound) <= Math.floor(parseFloat(checkbox.width) + parseFloat(checkbox.paddingLeft) + parseFloat(checkbox.paddingRight))) {
+      if (e.type === 'mousedown') {
+        e.preventDefault();
+        e.stopPropagation();
+      } else {
+        if (t.classList.contains('checked')) {
+          t.removeAttribute('class');
+        } else {
+          t.classList.add('checked');
+        }
+        document.activeElement.blur();
+        write();
+      }
+    }
+  }
+
+  function keyboard(e) {
+    const length = c.textContent.length;
+    if (length > maxLength) {
+      alert(length);
+      return;
+    }
+    fix();
+    write();
+  }
+
+  function copy(e) {
+    if (window.getSelection().toString().replace(/\s/g, '') === c.textContent.replace(/\s/g, '')) {
+      e.preventDefault();
+      const text = c.innerHTML
+        .replace(/<div( class="checked")*>(<br[^>]*>|&nbsp;|\s)*<\/div>/gi, '')
+        .replace(/<div>([^<]+)<\/div>/gi, '☐ $1\n')
+        .replace(/<div class="checked">([^<]+)<\/div>/gi, '✓ $1\n');
+      e.clipboardData.setData('text/plain', text);
+    }
+  }
+
+  function paste(e) {
+    e.preventDefault();
+    let text = (e.originalEvent || e).clipboardData.getData('text/plain');
+    const length = text.length + c.textContent.length;
+    if (length > maxLength) {
+      alert(length);
+      return;
+    }
+    if (text && !text.match(/^\s+$/)) {
+      text = text.replace(/[<>☐✓\s]/g, ' ').replace(/\s\s+/g, ' ').replace(/(^\s|\s$)/g, '');
+      document.execCommand('insertHTML', false, text);
+      if (c.innerHTML.match(/^<div[^>]*><br[^>]*><\/div>$/i)) document.execCommand('insertHTML', false, text);
+      write();
+    }
+  }
+
+  function fix() {
+    if (!c.innerHTML || !c.innerHTML.match(/<\/div>/i)) {
+      c.innerHTML = `<div><br></div>`;
+    }
+  }
+
+  function write() {
+    l.innerHTML = `${c.textContent.length}/${maxLength}`;
+    clearTimeout(writeTimer);
+    writeTimer = setTimeout(() => {
+      try {
+        localStorage.setItem('checklist', c.innerHTML);
+      } catch (e) {
+      }
+    }, 300);
+  }
+
+  function alert(length) {
+    a.innerHTML = `Maxlength exceeded (${length}/${maxLength})`;
+    a.classList.add('visible');
+    clearTimeout(alertTimer);
+    alertTimer = setTimeout(() => a.classList.remove('visible'), 5000);
+  }
+</script>
+</html>
