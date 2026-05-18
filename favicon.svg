@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+  <style>
+    rect, polyline {
+    opacity: .5;
+    stroke: #222;
+    fill: none;
+    }
+    @media (prefers-color-scheme: dark) {
+    rect, polyline {
+    stroke: #eee;
+    }
+    }
+  </style>
+  <rect width="64" height="64" stroke-width="16"/>
+  <polyline points="16,32 28,44 48,16" stroke-width="8"/>
+</svg>

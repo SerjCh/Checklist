@@ -6,12 +6,28 @@
   <meta name="viewport" content="width=device-width">
   <meta name="description" content="The simplest checklist ever">
   <meta name="keywords" content="checklist">
+  <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cstyle%3Erect,polyline%7Bopacity:.5;stroke:%23222;fill:none%7D@media (prefers-color-scheme:dark)%7Brect,polyline%7Bstroke:%23eee%7D%7D%3C/style%3E%3Crect width='64' height='64' stroke-width='16'/%3E%3Cpolyline points='16,32 28,44 48,16' stroke-width='8'/%3E%3C/svg%3E">
   <style>
+    :root {
+      --bg: #eee;
+      --text: #222;
+      --alert-bg: #f00;
+      --alert-text: #fff;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #222;
+        --text: #eee;
+      }
+    }
+
     html {
       font-family: 'Noto Sans Mono', monospace;
       font-size: xxx-large;
-      color: #ccc;
-      background: #333;
+      color: var(--text);
+      background: var(--bg);
     }
 
     @media (max-width: 480px) {
@@ -37,6 +53,7 @@
       overflow: auto;
       height: 100%;
       padding: 1rem 1rem 1rem 0;
+      outline: none;
       box-sizing: border-box;
 
       div {
@@ -54,14 +71,14 @@
         cursor: pointer;
         position: absolute;
         left: 0;
-        top: -.125em;
+        top: 0;
         height: 100%;
         padding: 0 .1875em 0 1rem;
         content: '☐';
       }
 
       div.checked {
-        color: #666;
+        opacity: .5;
         text-decoration: line-through;
       }
 
@@ -90,9 +107,9 @@
       right: 0;
       bottom: -3rem;
       padding: 1rem;
-      color: #ccc;
       text-align: center;
-      background: #c00;
+      color: var(--alert-text);
+      background: var(--alert-bg);
       transition: .25s ease all;
     }
 
@@ -106,7 +123,7 @@
 </head>
 
 <body>
-<div id="container" contenteditable>
+<div id="container" contenteditable spellcheck="false" autocorrect="off" autocapitalize="off">
   <div>Item1</div>
 </div>
 <small id="length"></small>
