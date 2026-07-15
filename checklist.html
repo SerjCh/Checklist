@@ -142,7 +142,8 @@
     c.innerHTML = init;
   }
   const maxLength = 65536;
-  l.innerHTML = `${c.textContent.length}/${maxLength}`;
+  const deltaLength = 128;
+  setContentInfo();
   let writeTimer = setTimeout(() => null);
   c.addEventListener('mousedown', mouse);
   c.addEventListener('click', mouse);
@@ -217,7 +218,7 @@
   }
 
   function write() {
-    l.innerHTML = `${c.textContent.length}/${maxLength}`;
+    setContentInfo();
     clearTimeout(writeTimer);
     writeTimer = setTimeout(() => {
       try {
@@ -225,6 +226,14 @@
       } catch (e) {
       }
     }, 300);
+  }
+
+  function setContentInfo() {
+    if ((c.textContent.length + deltaLength) >= maxLength) {
+      l.innerHTML = `${c.textContent.length}/${maxLength}`;
+    } else {
+      l.innerHTML = '';
+    }
   }
 
   function alert(length) {
