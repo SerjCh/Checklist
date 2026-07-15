@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>The checklist</title>
+  <title id="title">☐ 0/0</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <meta name="description" content="The simplest checklist ever">
   <meta name="keywords" content="checklist">
-  <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cstyle%3Erect,polyline%7Bopacity:.5;stroke:%23222;fill:none%7D@media (prefers-color-scheme:dark)%7Brect,polyline%7Bstroke:%23eee%7D%7D%3C/style%3E%3Crect width='64' height='64' stroke-width='16'/%3E%3Cpolyline points='16,32 28,44 48,16' stroke-width='8'/%3E%3C/svg%3E">
-  <style>
+  <link id="favicon" rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cstyle%3Erect,polyline%7Bopacity:.5;stroke:%23222;fill:none%7D@media (prefers-color-scheme:dark)%7Brect,polyline%7Bstroke:%23eee%7D%7D%3C/style%3E%3Crect width='64' height='64' stroke-width='16'/%3E%3Cpolyline points='16,32 28,44 48,16' stroke-width='8'/%3E%3C/svg%3E">  <style>
     :root {
       --bg: #eee;
       --text: #222;
@@ -131,9 +130,26 @@
 <div id="alert"></div>
 </body>
 <script>
+  const t = document.getElementById('title');
+  const f = document.getElementById('favicon');
   const c = document.getElementById('container');
   const l = document.getElementById('length');
   const a = document.getElementById('alert');
+  const faviconStartBeforeOpacity = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cstyle%3E`;
+  const opacity = `rect,polyline,text%7Bopacity:.5%7D`;
+  const faviconStartAfterOpacity = `rect,polyline%7Bstroke:%23222;fill:none%7Dtext%7Bfill:%23222%7D@media (prefers-color-scheme:dark)%7Brect,polyline%7Bstroke:%23eee%7Dtext%7Bfill:%23eee%7D%7D%3C/style%3E`;
+  const faviconStart = `${faviconStartBeforeOpacity}${faviconStartAfterOpacity}`;
+  const faviconStartChecked = `${faviconStartBeforeOpacity}${opacity}${faviconStartAfterOpacity}`;
+  const faviconEnd = `%3C/svg%3E`;
+  const uncheckedIcon = `%3Crect width='64' height='64' stroke-width='16'/%3E`;
+  const checkedIcon = `%3Cpolyline points='16,32 28,44 48,16' stroke-width='8'/%3E`;
+  let textStart = `%3Ctext x='`;
+  let textY = `' y='`;
+  let textSize = `' text-anchor='middle' font-size='`;
+  let textNum = `' font-weight='700' fill='%23222'%3E`;
+  let textEnd = `%3C/text%3E`;
+  const textSlash = `${textStart}32${textY}64${textSize}96${textNum}/${textEnd}`;
+  setTimeout(() => setTitleAndFavicon());
   let alertTimer = setTimeout(() => null);
   const init = `<div>Item1</div>`;
   try {
@@ -151,6 +167,26 @@
   c.addEventListener('keyup', keyboard);
   c.addEventListener('copy', copy);
   c.addEventListener('paste', paste);
+
+  function setTitleAndFavicon() {
+    const divs = Array.from(c.querySelectorAll('div'));
+    const all = divs.length;
+    const checked = divs.filter(e => e.classList.contains('checked')).length;
+    const long = checked > 9 || all > 9;
+    const textChecked = `${textStart}16${textY}${long ? 26 : 34}${textSize}${long ? 36 : 48}${textNum}${checked}${textEnd}`;
+    const textAll = `${textStart}48${textY}64${textSize}${long ? 34 : 46}${textNum}${all}${textEnd}`;
+    if (checked) {
+      t.innerHTML = `☑ ${checked}/${all}`;
+      if (checked >= all) {
+        f.href = `${faviconStartChecked}${uncheckedIcon}${checkedIcon}${faviconEnd}`;
+      } else {
+        f.href = `${faviconStart}${textChecked}${textSlash}${textAll}${faviconEnd}`;
+      }
+    } else {
+      t.innerHTML = `☐ ${checked}/${all}`;
+      f.href = `${faviconStart}${uncheckedIcon}${faviconEnd}`;
+    }
+  }
 
   function mouse(e) {
     const t = e.target;
@@ -170,6 +206,7 @@
         }
         document.activeElement.blur();
         write();
+        setTitleAndFavicon();
       }
     }
   }
@@ -182,6 +219,7 @@
     }
     fix();
     write();
+    setTitleAndFavicon();
   }
 
   function copy(e) {
@@ -208,6 +246,7 @@
       document.execCommand('insertHTML', false, text);
       if (c.innerHTML.match(/^<div[^>]*><br[^>]*><\/div>$/i)) document.execCommand('insertHTML', false, text);
       write();
+      setTitleAndFavicon();
     }
   }
 
